@@ -1,0 +1,55 @@
+version: '3'
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: my_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_logs:/var/log/mongodb
+    env_file:
+      - mongo.env
+    networks:
+      - my_network
+
+  jupyter:
+    image: jupyter/base-notebook:latest
+    container_name: my_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter_notebooks:/home/jovyan/work
+    environment:
+      - CHOWN_HOME=yes
+      - CHOWN_HOME_OPTS=-R
+      - GRANT_SUDO=yes
+      - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - my_network
+    depends_on:
+      - mongodb
+      - postgresql
+  
+  postgresql:
+    image: postgres:latest
+    container_name: my_postgresql
+    ports:
+      - "5432:5432"
+    env_file:
+      - postgre.env
+    networks:
+      - my_network
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data/
+
+volumes:
+  mongodb_data:
+  mongodb_logs:
+  jupyter_notebooks:
+  postgresql_data:
